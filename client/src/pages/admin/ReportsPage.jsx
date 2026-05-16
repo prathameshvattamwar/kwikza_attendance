@@ -255,8 +255,8 @@ function AttendanceTable({ data }) {
             <td className="px-5 py-3 text-gray-600">{row.employee_id || '—'}</td>
             <td className="px-5 py-3 text-gray-600">{row.department_name || '—'}</td>
             <td className="px-5 py-3 text-gray-600">{formatDate(row.date)}</td>
-            <td className="px-5 py-3 text-gray-600">{formatTime(row.check_in)}</td>
-            <td className="px-5 py-3 text-gray-600">{formatTime(row.check_out)}</td>
+            <td className="px-5 py-3 text-gray-600">{formatTime(row.check_in_time)}</td>
+            <td className="px-5 py-3 text-gray-600">{formatTime(row.check_out_time)}</td>
             <td className="px-5 py-3 text-gray-600">{row.work_hours ? `${Number(row.work_hours).toFixed(1)}h` : '—'}</td>
             <td className="px-5 py-3">
               <StatusBadge status={row.status} />

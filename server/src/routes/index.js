@@ -15,5 +15,6 @@ router.use('/leaves', require('./leave.routes'));
 router.use('/holidays', require('./holiday.routes'));
 router.use('/reports', require('./reports.routes'));
 router.use('/audit-logs', require('./auditLog.routes'));
+router.use('/settings', require('./settings.routes'));
 
 module.exports = router;

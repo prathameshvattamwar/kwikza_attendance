@@ -94,23 +94,19 @@ function EmployeeDashboard() {
     );
   }
 
-  const todayStatus = todayData || {};
-  const isCheckedIn = todayStatus.status === 'present' || todayStatus.status === 'late' || !!todayStatus.check_in;
-  const isCheckedOut = !!todayStatus.check_out;
+  const todayStatus = dashboard?.todayStatus || todayData || {};
+  const isCheckedIn = todayStatus.status === 'present' || todayStatus.status === 'late' || !!todayStatus.check_in_time;
+  const isCheckedOut = !!todayStatus.check_out_time;
 
-  const stats = dashboard?.stats || dashboard || {};
-  const daysPresent = stats.presentDays ?? stats.totalPresent ?? stats.daysPresent ?? 0;
-  const hoursWorked = stats.totalWorkHours ?? stats.hoursWorkedThisWeek ?? stats.avgWorkHours ?? 0;
-  const leaveBalance = stats.leaveBalance ?? null;
-  const currentStreak = stats.currentStreak ?? stats.streak ?? 0;
+  const monthSummary = dashboard?.monthSummary || {};
+  const daysPresent = monthSummary.present ?? 0;
+  const hoursWorked = 0; // not returned directly
+  const leaveBalances = dashboard?.leaveBalances || [];
+  const currentStreak = 0;
+  const upcomingHolidays = dashboard?.upcomingHolidays || [];
 
-  // Weekly attendance data
-  const weeklyTrend = (dashboard?.weeklyTrend || []).map((item) => ({
-    day: item.day || item.date || '',
-    hours: item.workHours ?? item.hours ?? 0,
-  }));
-
-  const weeklyData = weeklyTrend;
+  // No weekly trend data from API — use empty
+  const weeklyData = [];
 
   const firstName = user?.first_name || user?.name?.split(' ')[0] || 'there';
   const roleName = user?.role?.name || (user?.role ? String(user.role).replace(/_/g, ' ') : 'Employee');
@@ -118,10 +114,10 @@ function EmployeeDashboard() {
 
   // Calculate live work duration
   const getWorkDuration = () => {
-    if (!todayStatus.check_in) return null;
+    if (!todayStatus.check_in_time) return null;
     if (todayStatus.work_hours) return todayStatus.work_hours;
-    const checkInTime = new Date(todayStatus.check_in);
-    const now = todayStatus.check_out ? new Date(todayStatus.check_out) : new Date();
+    const checkInTime = new Date(todayStatus.check_in_time);
+    const now = todayStatus.check_out_time ? new Date(todayStatus.check_out_time) : new Date();
     const diffHours = (now - checkInTime) / (1000 * 60 * 60);
     return Math.round(diffHours * 10) / 10;
   };
@@ -176,12 +172,12 @@ function EmployeeDashboard() {
                   <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
                     <div className="flex items-center gap-1.5 text-sm text-gray-600">
                       <Clock className="h-4 w-4 text-gray-400" />
-                      <span>In: {formatTime(todayStatus.check_in)}</span>
+                      <span>In: {formatTime(todayStatus.check_in_time)}</span>
                     </div>
-                    {todayStatus.check_out && (
+                    {todayStatus.check_out_time && (
                       <div className="flex items-center gap-1.5 text-sm text-gray-600">
                         <Clock className="h-4 w-4 text-gray-400" />
-                        <span>Out: {formatTime(todayStatus.check_out)}</span>
+                        <span>Out: {formatTime(todayStatus.check_out_time)}</span>
                       </div>
                     )}
                     {workDuration != null && (
@@ -246,7 +242,7 @@ function EmployeeDashboard() {
         <StatsCard
           icon={CalendarDays}
           label="Leave Balance"
-          value={leaveBalance != null ? leaveBalance : '—'}
+          value={leaveBalances.length > 0 ? `${leaveBalances.reduce((sum, lb) => sum + Number(lb.remaining_days || 0), 0)} days` : '—'}
         />
         <StatsCard
           icon={TrendingUp}

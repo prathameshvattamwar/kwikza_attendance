@@ -36,9 +36,9 @@ function CheckInOutCard() {
   // Determine state from today's status
   const getState = useCallback(() => {
     if (!todayStatus) return 'not_checked_in';
-    const { status, check_in, check_out } = todayStatus;
-    if (check_out) return 'checked_out';
-    if (check_in) return 'checked_in';
+    const { check_in_time, check_out_time } = todayStatus;
+    if (check_out_time) return 'checked_out';
+    if (check_in_time) return 'checked_in';
     return 'not_checked_in';
   }, [todayStatus]);
 
@@ -46,13 +46,13 @@ function CheckInOutCard() {
 
   // Update elapsed duration when checked in
   useEffect(() => {
-    if (state !== 'checked_in' || !todayStatus?.check_in) {
+    if (state !== 'checked_in' || !todayStatus?.check_in_time) {
       setElapsed(null);
       return;
     }
 
     const calcElapsed = () => {
-      const checkInTime = new Date(todayStatus.check_in);
+      const checkInTime = new Date(todayStatus.check_in_time);
       const now = new Date();
       const diffMs = now - checkInTime;
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -64,7 +64,7 @@ function CheckInOutCard() {
     setElapsed(calcElapsed());
     const timer = setInterval(() => setElapsed(calcElapsed()), 1000);
     return () => clearInterval(timer);
-  }, [state, todayStatus?.check_in]);
+  }, [state, todayStatus?.check_in_time]);
 
   const handleCheckIn = async () => {
     try {
@@ -224,7 +224,7 @@ function CheckInOutCard() {
                 Checked In At
               </p>
               <p className="text-sm font-semibold text-green-800">
-                {formatTime(todayStatus?.check_in)}
+                {formatTime(todayStatus?.check_in_time)}
               </p>
             </div>
 
@@ -279,7 +279,7 @@ function CheckInOutCard() {
                   Check In
                 </p>
                 <p className="text-sm font-semibold text-green-800">
-                  {formatTime(todayStatus?.check_in)}
+                  {formatTime(todayStatus?.check_in_time)}
                 </p>
               </div>
               <div className="rounded-lg bg-red-50 p-3 text-center">
@@ -287,7 +287,7 @@ function CheckInOutCard() {
                   Check Out
                 </p>
                 <p className="text-sm font-semibold text-red-800">
-                  {formatTime(todayStatus?.check_out)}
+                  {formatTime(todayStatus?.check_out_time)}
                 </p>
               </div>
             </div>

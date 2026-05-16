@@ -68,7 +68,7 @@ const getAdminDashboard = async (orgId) => {
   const recentAttendance = await db('attendance_records')
     .select(
       'attendance_records.id',
-      'attendance_records.check_in',
+      'attendance_records.check_in_time',
       'attendance_records.status',
       'users.first_name',
       'users.last_name',
@@ -79,7 +79,7 @@ const getAdminDashboard = async (orgId) => {
     .leftJoin('departments', 'users.department_id', 'departments.id')
     .where('users.organization_id', orgId)
     .andWhere('attendance_records.date', today)
-    .orderBy('attendance_records.check_in', 'desc')
+    .orderBy('attendance_records.check_in_time', 'desc')
     .limit(10);
 
   return {

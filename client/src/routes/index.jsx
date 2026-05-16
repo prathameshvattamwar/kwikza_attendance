@@ -24,6 +24,7 @@ import LeaveApprovals from '@/pages/admin/LeaveApprovals';
 import HolidayManagement from '@/pages/admin/HolidayManagement';
 import ReportsPage from '@/pages/admin/ReportsPage';
 import AuditLogPage from '@/pages/admin/AuditLogPage';
+import SettingsPage from '@/pages/admin/SettingsPage';
 
 // Employee pages
 import EmployeeDashboard from '@/pages/employee/EmployeeDashboard';
@@ -110,6 +111,7 @@ function AppRoutes() {
             <Route path="/admin/holidays" element={<HolidayManagement />} />
             <Route path="/admin/reports" element={<ReportsPage />} />
             <Route path="/admin/audit-log" element={<AuditLogPage />} />
+            <Route path="/admin/settings" element={<SettingsPage />} />
           </Route>
 
           {/* Employee routes */}

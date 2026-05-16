@@ -99,19 +99,19 @@ function AdminDashboard() {
     );
   }
 
-  const totalEmployees = dashboard?.totalEmployees ?? dashboard?.stats?.totalEmployees ?? 0;
-  const presentToday = dashboard?.presentToday ?? dashboard?.stats?.presentToday ?? 0;
-  const absentToday = dashboard?.absentToday ?? dashboard?.stats?.absentToday ?? dashboard?.stats?.totalAbsent ?? 0;
-  const onLeave = dashboard?.onLeave ?? dashboard?.stats?.onLeave ?? 0;
-  const lateArrivals = dashboard?.lateArrivals ?? dashboard?.stats?.lateToday ?? 0;
-  const attendanceRate = dashboard?.attendanceRate ?? (totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0);
-  const recentActivity = dashboard?.recentActivity || [];
+  const totalEmployees = dashboard?.totalEmployees ?? 0;
+  const presentToday = dashboard?.presentToday ?? 0;
+  const onLeave = dashboard?.onLeaveToday ?? 0;
+  const absentToday = Math.max(0, totalEmployees - presentToday - onLeave);
+  const lateArrivals = 0; // not returned by API separately
+  const attendanceRate = totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0;
+  const recentActivity = dashboard?.recentAttendance || [];
 
   // Build last 7 days attendance chart data
-  const attendanceTrend = (dashboard?.attendanceTrend || dashboard?.weeklyAttendance || []).map((item) => ({
-    day: item.day || item.date || '',
-    present: item.presentCount ?? item.present ?? 0,
-    absent: item.absentCount ?? item.absent ?? 0,
+  const attendanceTrend = (dashboard?.weeklyAttendanceTrend || []).map((item) => ({
+    day: item.date ? item.date.slice(5) : '',
+    present: item.present ?? 0,
+    absent: 0,
   }));
 
   const chartData = attendanceTrend;
@@ -305,19 +305,19 @@ function AdminDashboard() {
                   className="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-4 py-3 transition-colors hover:bg-gray-50"
                 >
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-xs font-semibold text-primary-700">
-                    {getInitials(activity.employeeName || activity.name || '')}
+                    {getInitials(`${activity.first_name || ''} ${activity.last_name || ''}`)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-gray-900">
-                      {activity.employeeName || activity.name}
+                      {activity.first_name} {activity.last_name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {activity.department || 'General'}
+                      {activity.department_name || 'General'}
                     </p>
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <p className="text-xs text-gray-500">
-                      {formatTime(activity.checkInTime || activity.time)}
+                      {formatTime(activity.check_in_time)}
                     </p>
                     <StatusBadge
                       status={activity.status || 'present'}

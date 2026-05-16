@@ -12,6 +12,7 @@ import {
   UserCircle,
   Shield,
   ClipboardList,
+  Settings,
 } from 'lucide-react';
 
 // ── User Roles ──────────────────────────────────────────────
@@ -62,6 +63,7 @@ export const ADMIN_NAV_ITEMS = [
   { label: 'Holidays', path: '/admin/holidays', icon: CalendarDays },
   { label: 'Reports', path: '/admin/reports', icon: BarChart3 },
   { label: 'Audit Log', path: '/admin/audit-log', icon: Shield },
+  { label: 'Settings', path: '/admin/settings', icon: Settings },
 ];
 
 // ── Sidebar Navigation — Employee ───────────────────────────

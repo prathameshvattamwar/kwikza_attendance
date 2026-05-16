@@ -60,8 +60,7 @@ async function getUserWithOrg(userId) {
       'organizations.office_latitude',
       'organizations.office_longitude',
       'organizations.geofence_radius_meters',
-      'organizations.timezone',
-      'organizations.work_start_time'
+      'organizations.timezone'
     )
     .join('organizations', 'users.organization_id', 'organizations.id')
     .where('users.id', userId)
@@ -135,7 +134,7 @@ const checkIn = async (userId, { latitude, longitude, note, device_info, ip }) =
     status = ATTENDANCE_STATUS.HOLIDAY;
   } else {
     const currentTime = getCurrentTime(timezone);
-    const lateThreshold = user.work_start_time || DEFAULT_LATE_THRESHOLD;
+    const lateThreshold = DEFAULT_LATE_THRESHOLD;
     if (isLate(currentTime, lateThreshold)) {
       status = ATTENDANCE_STATUS.LATE;
     }
@@ -144,14 +143,13 @@ const checkIn = async (userId, { latitude, longitude, note, device_info, ip }) =
   // 6. Create the attendance record
   const record = await AttendanceModel.create({
     user_id: userId,
-    organization_id: user.organization_id,
     date: today,
     check_in_time: db.fn.now(),
     check_in_latitude: latitude,
     check_in_longitude: longitude,
     check_in_ip: ip || null,
     status,
-    note: note || null,
+    check_in_note: note || null,
     device_info: device_info ? JSON.stringify(device_info) : null,
     is_manual_entry: false,
   });
@@ -312,7 +310,7 @@ const manualEntry = async (adminId, data) => {
       check_in_time,
       check_out_time: check_out_time || null,
       status,
-      note: reason,
+      manual_entry_reason: reason,
       is_manual_entry: true,
       manual_entry_by: adminId,
     });
@@ -324,12 +322,11 @@ const manualEntry = async (adminId, data) => {
   // Create new manual entry
   const record = await AttendanceModel.create({
     user_id,
-    organization_id: admin.organization_id,
     date,
     check_in_time,
     check_out_time: check_out_time || null,
     status,
-    note: reason,
+    manual_entry_reason: reason,
     is_manual_entry: true,
     manual_entry_by: adminId,
   });

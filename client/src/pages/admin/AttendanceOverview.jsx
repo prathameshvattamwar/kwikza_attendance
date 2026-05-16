@@ -60,12 +60,12 @@ const columns = [
     label: 'Employee ID',
   },
   {
-    key: 'check_in',
+    key: 'check_in_time',
     label: 'Check In',
     render: (value) => formatTime(value),
   },
   {
-    key: 'check_out',
+    key: 'check_out_time',
     label: 'Check Out',
     render: (value) => formatTime(value),
   },

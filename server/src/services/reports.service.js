@@ -15,8 +15,8 @@ const getAttendanceReport = async (orgId, options = {}) => {
     .select(
       'attendance_records.id',
       'attendance_records.date',
-      'attendance_records.check_in',
-      'attendance_records.check_out',
+      'attendance_records.check_in_time',
+      'attendance_records.check_out_time',
       'attendance_records.status',
       'attendance_records.work_hours',
       'users.first_name',
@@ -152,8 +152,8 @@ const getAttendanceExport = async (orgId, options = {}) => {
       'users.email',
       'departments.name as department',
       'attendance_records.date',
-      'attendance_records.check_in',
-      'attendance_records.check_out',
+      'attendance_records.check_in_time',
+      'attendance_records.check_out_time',
       'attendance_records.status',
       'attendance_records.work_hours'
     )
