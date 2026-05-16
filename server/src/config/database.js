@@ -37,4 +37,7 @@ async function testConnection() {
   }
 }
 
-module.exports = { db, testConnection };
+// Export db as the default (so require('../config/database') returns the knex instance)
+// Also attach testConnection as a property for server.js
+db.testConnection = testConnection;
+module.exports = db;

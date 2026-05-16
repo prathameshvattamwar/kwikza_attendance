@@ -21,7 +21,7 @@ const getAdminDashboard = async (orgId) => {
     .join('users', 'attendance_records.user_id', 'users.id')
     .where('users.organization_id', orgId)
     .andWhere('attendance_records.date', today)
-    .andWhereIn('attendance_records.status', ['present', 'late', 'half_day', 'work_from_home'])
+    .whereIn('attendance_records.status', ['present', 'late', 'half_day'])
     .count('attendance_records.id as count')
     .first();
 
@@ -54,7 +54,7 @@ const getAdminDashboard = async (orgId) => {
       .join('users', 'attendance_records.user_id', 'users.id')
       .where('users.organization_id', orgId)
       .andWhere('attendance_records.date', dateStr)
-      .andWhereIn('attendance_records.status', ['present', 'late', 'half_day', 'work_from_home'])
+      .whereIn('attendance_records.status', ['present', 'late', 'half_day'])
       .count('attendance_records.id as count')
       .first();
 
@@ -68,7 +68,7 @@ const getAdminDashboard = async (orgId) => {
   const recentAttendance = await db('attendance_records')
     .select(
       'attendance_records.id',
-      'attendance_records.check_in_time',
+      'attendance_records.check_in',
       'attendance_records.status',
       'users.first_name',
       'users.last_name',
@@ -79,7 +79,7 @@ const getAdminDashboard = async (orgId) => {
     .leftJoin('departments', 'users.department_id', 'departments.id')
     .where('users.organization_id', orgId)
     .andWhere('attendance_records.date', today)
-    .orderBy('attendance_records.check_in_time', 'desc')
+    .orderBy('attendance_records.check_in', 'desc')
     .limit(10);
 
   return {
@@ -126,7 +126,7 @@ const getEmployeeDashboard = async (user) => {
   };
 
   for (const record of monthRecords) {
-    if (record.status === 'present' || record.status === 'work_from_home') {
+    if (record.status === 'present') {
       monthSummary.present++;
     } else if (record.status === 'absent') {
       monthSummary.absent++;
@@ -143,8 +143,7 @@ const getEmployeeDashboard = async (user) => {
       'leave_balances.total_days',
       'leave_balances.used_days',
       'leave_balances.remaining_days',
-      'leave_types.name as leave_type',
-      'leave_types.code as leave_type_code'
+      'leave_types.name as leave_type'
     )
     .join('leave_types', 'leave_balances.leave_type_id', 'leave_types.id')
     .where('leave_balances.user_id', user.id)

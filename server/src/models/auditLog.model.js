@@ -53,7 +53,45 @@ const findByEntity = async (entityType, entityId, { page = 1, limit = 20 } = {})
   return { data, total: parseInt(total, 10) };
 };
 
+/**
+ * Find audit logs for an organization with pagination and filters
+ * @param {string} orgId - Organization UUID
+ * @param {object} options - { page, limit, action, entity_type }
+ * @returns {Promise<{ data: object[], total: number }>}
+ */
+const findByOrganization = async (orgId, { page = 1, limit = 20, action, entity_type } = {}) => {
+  const offset = (page - 1) * limit;
+
+  const query = db(TABLE)
+    .select(
+      'audit_logs.*',
+      'users.first_name',
+      'users.last_name',
+      'users.email'
+    )
+    .leftJoin('users', 'audit_logs.user_id', 'users.id')
+    .where('audit_logs.organization_id', orgId);
+
+  if (action) {
+    query.andWhere('audit_logs.action', action);
+  }
+  if (entity_type) {
+    query.andWhere('audit_logs.entity_type', entity_type);
+  }
+
+  const countQuery = query.clone().clearSelect().clearOrder().count('audit_logs.id as count').first();
+  const { count: total } = await countQuery;
+
+  const data = await query
+    .orderBy('audit_logs.created_at', 'desc')
+    .limit(limit)
+    .offset(offset);
+
+  return { data, total: parseInt(total, 10) };
+};
+
 module.exports = {
   create,
   findByEntity,
+  findByOrganization,
 };

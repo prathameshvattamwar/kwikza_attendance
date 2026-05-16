@@ -5,6 +5,7 @@ const emailService = require('../services/email.service');
 const UserModel = require('../models/user.model');
 const AppError = require('../utils/AppError');
 const { success, created } = require('../utils/response');
+const { logAudit } = require('../utils/auditHelper');
 
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -27,6 +28,16 @@ const login = asyncHandler(async (req, res) => {
     sameSite: 'strict',
     maxAge: COOKIE_MAX_AGE,
     path: '/',
+  });
+
+  logAudit({
+    userId: result.user.id,
+    orgId: result.user.organization_id,
+    action: 'login',
+    entityType: 'user',
+    entityId: result.user.id,
+    ipAddress: ipAddress,
+    userAgent: userAgent,
   });
 
   return success(res, 'Login successful', {
@@ -81,6 +92,14 @@ const logout = asyncHandler(async (req, res) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
+  });
+
+  logAudit({
+    userId: req.user.id,
+    orgId: req.user.organization_id,
+    action: 'logout',
+    entityType: 'user',
+    entityId: req.user.id,
   });
 
   return success(res, 'Logged out successfully');
@@ -165,6 +184,61 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 /**
+ * POST /auth/google
+ * Authenticate user via Google OAuth
+ */
+const googleLogin = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    throw AppError.badRequest('Google credential is required');
+  }
+
+  const ipAddress = req.ip || req.connection.remoteAddress;
+  const userAgent = req.headers['user-agent'] || '';
+
+  const result = await authService.googleLogin(credential, ipAddress, userAgent);
+
+  // Set refresh token as httpOnly cookie
+  res.cookie(REFRESH_TOKEN_COOKIE, result.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: COOKIE_MAX_AGE,
+    path: '/',
+  });
+
+  return success(res, 'Login successful', {
+    user: result.user,
+    accessToken: result.accessToken,
+  });
+});
+
+/**
+ * PATCH /auth/profile
+ * Update the authenticated user's profile
+ */
+const updateProfile = asyncHandler(async (req, res) => {
+  const allowedFields = ['first_name', 'last_name', 'phone', 'date_of_birth'];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw AppError.badRequest('No valid fields to update');
+  }
+
+  const updatedUser = await UserModel.updateById(req.user.id, updates);
+  const { password_hash, ...profile } = updatedUser;
+
+  return success(res, 'Profile updated successfully', profile);
+});
+
+/**
  * GET /auth/me
  * Return the authenticated user's profile
  */
@@ -189,4 +263,6 @@ module.exports = {
   sendOtp,
   verifyOtp,
   getMe,
+  updateProfile,
+  googleLogin,
 };

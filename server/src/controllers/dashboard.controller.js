@@ -10,7 +10,7 @@ const adminDashboard = asyncHandler(async (req, res) => {
   const data = await dashboardService.getAdminDashboard(
     req.user.organization_id
   );
-  return success(res, data, 'Admin dashboard fetched successfully');
+  return success(res, 'Admin dashboard fetched successfully', data);
 });
 
 /**
@@ -19,7 +19,7 @@ const adminDashboard = asyncHandler(async (req, res) => {
  */
 const employeeDashboard = asyncHandler(async (req, res) => {
   const data = await dashboardService.getEmployeeDashboard(req.user);
-  return success(res, data, 'Employee dashboard fetched successfully');
+  return success(res, 'Employee dashboard fetched successfully', data);
 });
 
 module.exports = {

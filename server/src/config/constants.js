@@ -18,7 +18,6 @@ const ATTENDANCE_STATUS = Object.freeze({
   ON_LEAVE: 'on_leave',
   HOLIDAY: 'holiday',
   WEEKEND: 'weekend',
-  WFH: 'work_from_home',
 });
 
 const LEAVE_STATUS = Object.freeze({

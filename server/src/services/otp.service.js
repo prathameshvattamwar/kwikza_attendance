@@ -31,7 +31,7 @@ const createOtp = async (userId, email, purpose) => {
     .where('email', email.toLowerCase())
     .andWhere('purpose', purpose)
     .andWhere('is_used', false)
-    .update({ is_used: true, updated_at: db.fn.now() });
+    .update({ is_used: true });
 
   // Generate and hash the OTP
   const otp = generateOtp();
@@ -79,20 +79,20 @@ const verifyOtp = async (email, otp, purpose) => {
 
   // Check if expired
   if (new Date() > new Date(otpRecord.expires_at)) {
-    await db(TABLE).where('id', otpRecord.id).update({ is_used: true, updated_at: db.fn.now() });
+    await db(TABLE).where('id', otpRecord.id).update({ is_used: true });
     return { success: false, message: 'OTP has expired. Please request a new one.' };
   }
 
   // Check max attempts
   if (otpRecord.attempts >= MAX_ATTEMPTS) {
-    await db(TABLE).where('id', otpRecord.id).update({ is_used: true, updated_at: db.fn.now() });
+    await db(TABLE).where('id', otpRecord.id).update({ is_used: true });
     return { success: false, message: 'Maximum verification attempts exceeded. Please request a new OTP.' };
   }
 
   // Increment attempt count
   await db(TABLE)
     .where('id', otpRecord.id)
-    .update({ attempts: otpRecord.attempts + 1, updated_at: db.fn.now() });
+    .update({ attempts: otpRecord.attempts + 1 });
 
   // Verify OTP with bcrypt
   const isValid = await bcrypt.compare(otp, otpRecord.otp_hash);
@@ -107,7 +107,7 @@ const verifyOtp = async (email, otp, purpose) => {
   // Mark as used
   await db(TABLE)
     .where('id', otpRecord.id)
-    .update({ is_used: true, verified_at: db.fn.now(), updated_at: db.fn.now() });
+    .update({ is_used: true });
 
   logger.info(`OTP verified for ${email} (purpose: ${purpose})`);
 

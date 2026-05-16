@@ -1,13 +1,18 @@
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/tokenHelper');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
+const env = require('../config/env');
 const UserModel = require('../models/user.model');
 const SessionModel = require('../models/session.model');
+const db = require('../config/database');
 
 const SALT_ROUNDS = 12;
 const REFRESH_TOKEN_EXPIRY_DAYS = 30;
+
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 /**
  * Hash a refresh token with SHA-256 for secure storage
@@ -204,10 +209,130 @@ const setupPassword = async (userId, currentPassword, newPassword) => {
   logger.info(`Password setup completed for user: ${userId}`);
 };
 
+/**
+ * Google OAuth login — verify Google ID token and login/register user
+ * @param {string} credential - Google ID token
+ * @param {string} ipAddress
+ * @param {string} userAgent
+ * @returns {Promise<{ user: object, accessToken: string, refreshToken: string }>}
+ */
+const googleLogin = async (credential, ipAddress, userAgent) => {
+  // 1. Verify Google ID token
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: env.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    logger.error('Google token verification failed:', err.message);
+    throw AppError.unauthorized('Invalid Google credential');
+  }
+
+  const { sub: googleId, email, given_name, family_name, picture, email_verified } = payload;
+
+  if (!email) {
+    throw AppError.badRequest('Google account does not have an email address');
+  }
+
+  // 2. Find existing user by email
+  let user = await UserModel.findByEmail(email);
+
+  if (user) {
+    // Existing user — check active status
+    if (!user.is_active) {
+      throw AppError.unauthorized('Account is deactivated. Contact your administrator.');
+    }
+
+    // Update google_id and avatar if not already set
+    const updates = {};
+    if (!user.google_id) updates.google_id = googleId;
+    if (!user.avatar_url && picture) updates.avatar_url = picture;
+    if (Object.keys(updates).length > 0) {
+      await UserModel.updateById(user.id, updates);
+    }
+  } else {
+    // New user — create with employee role
+    const employeeRole = await db('roles').where('name', 'employee').first();
+    if (!employeeRole) {
+      throw AppError.badRequest('Default employee role not found. Contact administrator.');
+    }
+
+    // Find a default organization
+    const defaultOrg = await db('organizations').first();
+    if (!defaultOrg) {
+      throw AppError.badRequest('No organization found. Contact administrator.');
+    }
+
+    // Generate a random password (user won't need it for Google login)
+    const randomPassword = crypto.randomBytes(32).toString('hex');
+    const passwordHash = await bcrypt.hash(randomPassword, SALT_ROUNDS);
+
+    // Generate employee ID
+    const employeeId = `EMP-${Date.now().toString(36).toUpperCase()}`;
+
+    user = await UserModel.create({
+      organization_id: defaultOrg.id,
+      role_id: employeeRole.id,
+      employee_id: employeeId,
+      first_name: given_name || email.split('@')[0],
+      last_name: family_name || '',
+      email: email.toLowerCase(),
+      password_hash: passwordHash,
+      google_id: googleId,
+      avatar_url: picture || null,
+      is_first_login: false,
+      is_email_verified: true,
+      is_active: true,
+    });
+
+    // Re-fetch with role join
+    user = await UserModel.findByEmail(email);
+  }
+
+  // 3. Generate tokens
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    organizationId: user.organization_id,
+  });
+
+  const refreshToken = generateRefreshToken({ userId: user.id });
+
+  // 4. Store session
+  const refreshTokenHash = hashToken(refreshToken);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+  await SessionModel.create({
+    user_id: user.id,
+    refresh_token_hash: refreshTokenHash,
+    ip_address: ipAddress,
+    user_agent: userAgent,
+    expires_at: expiresAt,
+  });
+
+  // 5. Update last login
+  await UserModel.updateLastLogin(user.id);
+
+  logger.info(`User logged in via Google: ${user.email}`);
+
+  // 6. Return sanitized user + tokens
+  const { password_hash, ...safeUser } = user;
+  return {
+    user: safeUser,
+    accessToken,
+    refreshToken,
+  };
+};
+
 module.exports = {
   login,
   refreshToken: refreshTokenFn,
   logout,
   logoutAll,
   setupPassword,
+  googleLogin,
 };

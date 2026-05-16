@@ -103,8 +103,94 @@ const sendWelcomeEmail = async (to, name, tempPassword) => {
   }
 };
 
+/**
+ * Send leave application confirmation to employee
+ * @param {string} to - Employee email
+ * @param {string} name - Employee name
+ * @param {object} leave - { leave_type, start_date, end_date, total_days }
+ */
+const sendLeaveAppliedEmail = async (to, name, leave) => {
+  const transport = createTransporter();
+
+  const mailOptions = {
+    from: `"${process.env.SMTP_FROM_NAME || 'Attendance System'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to,
+    subject: 'Leave Request Submitted',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333;">Leave Request Submitted</h2>
+        <p>Hi ${name},</p>
+        <p>Your leave request has been submitted successfully and is pending approval.</p>
+        <div style="background-color: #f4f4f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p><strong>Leave Type:</strong> ${leave.leave_type || 'N/A'}</p>
+          <p><strong>From:</strong> ${leave.start_date}</p>
+          <p><strong>To:</strong> ${leave.end_date}</p>
+          <p><strong>Total Days:</strong> ${leave.total_days}</p>
+        </div>
+        <p style="color: #666;">You will be notified once your request is reviewed.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px;">Attendance Management System</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transport.sendMail(mailOptions);
+    logger.info(`Leave applied email sent to ${to}`);
+  } catch (error) {
+    logger.error(`Failed to send leave applied email to ${to}: ${error.message}`);
+  }
+};
+
+/**
+ * Send leave approval/rejection notification to employee
+ * @param {string} to - Employee email
+ * @param {string} name - Employee name
+ * @param {string} status - 'approved' or 'rejected'
+ * @param {object} leave - { leave_type, start_date, end_date, total_days }
+ * @param {string} [remarks] - Review remarks (for rejections)
+ */
+const sendLeaveStatusEmail = async (to, name, status, leave, remarks) => {
+  const transport = createTransporter();
+
+  const isApproved = status === 'approved';
+  const statusColor = isApproved ? '#27ae60' : '#e74c3c';
+  const statusText = isApproved ? 'Approved' : 'Rejected';
+
+  const mailOptions = {
+    from: `"${process.env.SMTP_FROM_NAME || 'Attendance System'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to,
+    subject: `Leave Request ${statusText}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333;">Leave Request ${statusText}</h2>
+        <p>Hi ${name},</p>
+        <p>Your leave request has been <span style="color: ${statusColor}; font-weight: bold;">${statusText.toLowerCase()}</span>.</p>
+        <div style="background-color: #f4f4f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p><strong>Leave Type:</strong> ${leave.leave_type || 'N/A'}</p>
+          <p><strong>From:</strong> ${leave.start_date}</p>
+          <p><strong>To:</strong> ${leave.end_date}</p>
+          <p><strong>Total Days:</strong> ${leave.total_days}</p>
+          ${remarks ? `<p><strong>Remarks:</strong> ${remarks}</p>` : ''}
+        </div>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="color: #999; font-size: 12px;">Attendance Management System</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transport.sendMail(mailOptions);
+    logger.info(`Leave ${status} email sent to ${to}`);
+  } catch (error) {
+    logger.error(`Failed to send leave ${status} email to ${to}: ${error.message}`);
+  }
+};
+
 module.exports = {
   createTransporter,
   sendOtpEmail,
   sendWelcomeEmail,
+  sendLeaveAppliedEmail,
+  sendLeaveStatusEmail,
 };

@@ -1,6 +1,7 @@
 const app = require('./app');
 const env = require('./config/env');
-const { testConnection } = require('./config/database');
+const db = require('./config/database');
+const testConnection = db.testConnection;
 const logger = require('./utils/logger');
 
 let server;

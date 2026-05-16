@@ -20,7 +20,7 @@ const getEmployee = asyncHandler(async (req, res) => {
     req.params.id,
     req.user.organization_id
   );
-  return success(res, employee, 'Employee fetched successfully');
+  return success(res, 'Employee fetched successfully', employee);
 });
 
 /**
@@ -45,7 +45,7 @@ const updateEmployee = asyncHandler(async (req, res) => {
     req.params.id,
     req.body
   );
-  return success(res, employee, 'Employee updated successfully');
+  return success(res, 'Employee updated successfully', employee);
 });
 
 /**
@@ -57,7 +57,7 @@ const deactivateEmployee = asyncHandler(async (req, res) => {
     req.user,
     req.params.id
   );
-  return success(res, employee, 'Employee deactivated successfully');
+  return success(res, 'Employee deactivated successfully', employee);
 });
 
 /**
@@ -69,7 +69,7 @@ const reactivateEmployee = asyncHandler(async (req, res) => {
     req.user,
     req.params.id
   );
-  return success(res, employee, 'Employee reactivated successfully');
+  return success(res, 'Employee reactivated successfully', employee);
 });
 
 /**
@@ -80,7 +80,7 @@ const getDepartments = asyncHandler(async (req, res) => {
   const departments = await employeeService.getDepartments(
     req.user.organization_id
   );
-  return success(res, departments, 'Departments fetched successfully');
+  return success(res, 'Departments fetched successfully', departments);
 });
 
 /**
@@ -89,7 +89,7 @@ const getDepartments = asyncHandler(async (req, res) => {
  */
 const getRoles = asyncHandler(async (req, res) => {
   const roles = await employeeService.getRoles();
-  return success(res, roles, 'Roles fetched successfully');
+  return success(res, 'Roles fetched successfully', roles);
 });
 
 module.exports = {

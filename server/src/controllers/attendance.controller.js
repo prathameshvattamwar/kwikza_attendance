@@ -50,7 +50,7 @@ const checkOut = asyncHandler(async (req, res) => {
     ip,
   });
 
-  return success(res, record, 'Checked out successfully');
+  return success(res, 'Checked out successfully', record);
 });
 
 /**
@@ -59,7 +59,7 @@ const checkOut = asyncHandler(async (req, res) => {
  */
 const getTodayStatus = asyncHandler(async (req, res) => {
   const record = await attendanceService.getTodayStatus(req.user.id);
-  return success(res, record, 'Today\'s attendance status');
+  return success(res, 'Today\'s attendance status', record);
 });
 
 /**
@@ -85,7 +85,7 @@ const getMonthlySummary = asyncHandler(async (req, res) => {
   }
 
   const summary = await attendanceService.getMonthlySummary(req.user.id, month, year);
-  return success(res, summary, 'Monthly summary fetched');
+  return success(res, 'Monthly summary fetched', summary);
 });
 
 /**

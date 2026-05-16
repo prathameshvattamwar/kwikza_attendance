@@ -9,7 +9,7 @@
  * @param {string} [message='Success'] - Response message
  * @param {number} [statusCode=200] - HTTP status code
  */
-function success(res, data = null, message = 'Success', statusCode = 200) {
+function success(res, message = 'Success', data = null, statusCode = 200) {
   const response = {
     success: true,
     message,
@@ -27,7 +27,7 @@ function success(res, data = null, message = 'Success', statusCode = 200) {
  * @param {string} [message='Resource created successfully'] - Response message
  */
 function created(res, data = null, message = 'Resource created successfully') {
-  return success(res, data, message, 201);
+  return success(res, message, data, 201);
 }
 
 /**

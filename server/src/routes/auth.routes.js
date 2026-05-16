@@ -13,6 +13,7 @@ const {
 
 // Public routes (with rate limiting)
 router.post('/login', authLimiter, validate(loginSchema), authController.login);
+router.post('/google', authLimiter, authController.googleLogin);
 router.post('/refresh-token', authController.refreshToken);
 router.post('/send-otp', authLimiter, authController.sendOtp);
 router.post('/verify-otp', authLimiter, validate(verifyOtpSchema), authController.verifyOtp);
@@ -22,5 +23,6 @@ router.post('/logout', authenticate, authController.logout);
 router.post('/logout-all', authenticate, authController.logoutAll);
 router.post('/setup-password', authenticate, validate(setupPasswordSchema), authController.setupPassword);
 router.get('/me', authenticate, authController.getMe);
+router.patch('/profile', authenticate, authController.updateProfile);
 
 module.exports = router;

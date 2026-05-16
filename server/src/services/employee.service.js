@@ -72,7 +72,6 @@ const createEmployee = async (adminUser, employeeData) => {
         year: currentYear,
         total_days: lt.default_days_per_year,
         used_days: 0,
-        remaining_days: lt.default_days_per_year,
       }));
 
       await db('leave_balances').insert(leaveBalances);
@@ -177,8 +176,10 @@ const listEmployees = async (orgId, filters = {}) => {
   const countQuery = query.clone().clearSelect().clearOrder().count('users.id as count').first();
   const { count: total } = await countQuery;
 
-  // Sorting
-  const sortColumn = sort_by ? `users.${sort_by}` : 'users.created_at';
+  // Sorting — validate sort_by to prevent SQL injection
+  const ALLOWED_SORT_COLUMNS = ['first_name', 'last_name', 'email', 'employee_id', 'created_at', 'date_of_joining'];
+  const safeSortBy = (sort_by && ALLOWED_SORT_COLUMNS.includes(sort_by)) ? sort_by : 'created_at';
+  const sortColumn = `users.${safeSortBy}`;
   const sortDir = sort_order || 'desc';
 
   // Get paginated data

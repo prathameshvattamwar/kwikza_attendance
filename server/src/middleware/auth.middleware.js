@@ -42,7 +42,8 @@ const authenticate = asyncHandler(async (req, res, next) => {
       'users.last_name',
       'users.is_active',
       'users.is_first_login',
-      'roles.name as role'
+      'roles.name as role',
+      'roles.permissions'
     )
     .leftJoin('roles', 'users.role_id', 'roles.id')
     .where('users.id', decoded.userId)

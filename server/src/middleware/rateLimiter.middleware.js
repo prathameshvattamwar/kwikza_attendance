@@ -1,11 +1,15 @@
 const rateLimit = require('express-rate-limit');
+const env = require('../config/env');
+
+// In development, use very generous limits
+const isDev = env.isDev;
 
 /**
- * General rate limiter — 100 requests per 15 minutes
+ * General rate limiter
  */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isDev ? 1000 : 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -16,11 +20,11 @@ const generalLimiter = rateLimit({
 });
 
 /**
- * Auth rate limiter — 10 requests per 15 minutes (login, register, etc.)
+ * Auth rate limiter
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: isDev ? 100 : 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -31,11 +35,11 @@ const authLimiter = rateLimit({
 });
 
 /**
- * API rate limiter — 60 requests per minute
+ * API rate limiter
  */
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: isDev ? 500 : 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
